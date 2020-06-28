@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Kalkulator kredita</title>
+		
+		<style>
+			* {
+				padding: 0;
+				margin: 0;
+				box-sizing: border-box;
+			}
+			
+			html, body {
+				height: 100%;
+			}
+			
+			body {
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+				background-color: #afafaf;
+				font-size: 17px;
+				font-family: 'Roboto', sans-serif!important;
+				color: #444;
+			}
+			
+			main {
+				padding: 30px;
+				width: 100%;
+				max-width: 460px;
+				background: #f1f1f1;
+				border-radius: 8px;
+			}
+			
+			input {
+				display: block;
+				height: 56px;
+				border: none;
+				width: 100%;
+				outline: none!important;
+				padding: 0 15px;
+				font-size: 1rem;
+			}
+			
+			input:first-child {
+				border-radius: 3px 3px 0 0;
+				border-bottom: 1px solid #f1f1f1;
+			}
+			
+			input:nth-child(2) {
+				border-radius: 0 0 3px 3px;
+			}
+			
+			.info-item {
+				margin-bottom: 20px;
+				font-size: 0.9rem;
+				padding-left: 20px;
+				opacity: 0.7;
+			}
+			
+			.info-item:first-child {
+				padding: 0;
+				opacity: 1;
+			}
+			
+			.info-item.total {
+				font-size: 1.2rem;
+				border-top: 1px solid #e1e1e1;
+				padding-top: 20px;
+				padding-left: 10px;
+				opacity: 1;
+			}
+			
+			.info-item > .amount {
+				padding-left: 10px;
+			}
+			
+			.info-item > .amount > * {
+				display: block;
+			}
+			
+			.info-item > .amount > span {
+				font-size: 0.8rem;
+				padding-left: 8px;
+			}
+			
+			.info-item.total > .amount > span {
+				font-size: 0.9rem;
+				padding-left: 15px;
+			}
+			
+			.bottom-link {
+				color: #fff;
+				font-size: 0.9rem;
+				margin-top: 10px;
+			}
+			
+			.bottom-link > a {
+				color: #fff;
+			}
+		</style>
+		<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+	</head>
+	<body>
+		<main>
+			<div class="info-item">
+				<input id="house-price-input" type="number" placeholder="Osnovna cena nekretnine u  €" />
+				<input id="avans-percentage-input" type="number" placeholder="Minimalni procenat učešća" value="30" />
+			</div>
+			
+			<div class="info-item">
+				<strong class="label">Sa kamatom i troškovima obrade:</strong>
+				<div class="amount">
+					<strong>= <span id="house-total-eur">00.00</span> €</strong>
+					<span>(<span id="house-total-din">00.00</span> din.)</span>
+				</div>
+			</div>
+			
+			<div class="info-item">
+				<strong class="label">Minimalno učešće (<span id="avans-percentage">30</span>%):</strong>
+				<div class="amount">
+					<strong>= <span id="avans-eur">00.00</span> €</strong>
+					<span>(<span id="avans-din">00.00</span> din.)</span>
+				</div>
+			</div>
+			
+			<div class="info-item">
+				<strong class="label">Keš kredit sa kamatom i troškovima obrade:</strong>
+				<div class="amount">
+					<strong>= <span id="cash-total-eur">00.00</span> €</strong>
+					<span>(<span id="cash-total-din">00.00</span> din.)</span>
+				</div>
+			</div>
+			
+			<div class="info-item">
+				<strong class="label">Rata za stambeni kredit:</strong>
+				<div class="amount">
+					<strong>= <span id="monthly-house-eur">00.00</span> €</strong>
+					<span>(<span id="monthly-house-din">00.00</span> din.)</span>
+				</div>
+			</div>
+			
+			<div class="info-item">
+				<strong class="label">Rata za keš kredit:</strong>
+				<div class="amount">
+					<strong>= <span id="monthly-cash-eur">00.00</span> €</strong>
+					<span>(<span id="monthly-cash-din">00.00</span> din.)</span>
+				</div>
+			</div>
+			
+			<div class="info-item total">
+				<strong class="label">Ukupna rata:</strong>
+				<div class="amount">
+					<strong>= <span id="monthly-total-eur">00.00</span> €</strong>
+					<span>(<span id="monthly-total-din">00.00</span>din.)</span>
+				</div>
+			</div>
+		</main>
+		<span class="bottom-link">Credit Agricole:
+			<a href="https://www.creditagricole.rs/krediti/gotovinski-krediti/gotovinski-krediti.87.html" target="_blank">Keš</a>/
+			<a href="https://www.creditagricole.rs/stanovnistvo/krediti/stambeni-krediti.137.html" target="_blank">Stambeni</a>
+		</span>
+		
+		<script>
+			// Constants
+			const cashInterestCoefficient = 1.15;// 15%
+			const houseInterestCoefficient = 1.1;// 10%
+			
+			const cashMonths = 83;// 7 years
+			const houseMonths = 300;// 25 years
+			
+			const dinarToEuroRate = 119;
+			
+			// DOM elements
+			const housePriceInput = document.getElementById('house-price-input');
+			const avansPercentageInput = document.getElementById('avans-percentage-input');
+			
+			const houseTotalEur = document.getElementById('house-total-eur');
+			const houseTotalDin = document.getElementById('house-total-din');
+			
+			const avansPercentage = document.getElementById('avans-percentage');
+			
+			const avansEur = document.getElementById('avans-eur');
+			const avansDin = document.getElementById('avans-din');
+			
+			const cashTotalEur = document.getElementById('cash-total-eur');
+			const cashTotalDin = document.getElementById('cash-total-din');
+			
+			const monthlyHouseEur = document.getElementById('monthly-house-eur');
+			const monthlyHouseDin = document.getElementById('monthly-house-din');
+			
+			const monthlyCashEur = document.getElementById('monthly-cash-eur');
+			const monthlyCashDin = document.getElementById('monthly-cash-din');
+			
+			const monthlyTotalEur = document.getElementById('monthly-total-eur');
+			const monthlyTotalDin = document.getElementById('monthly-total-din');
+			
+			// Functions
+			const toDinars = euros => euros * dinarToEuroRate;
+			
+			const render = (values) => {
+				houseTotalEur.innerHTML = values.houseTotal.toFixed(2);
+				houseTotalDin.innerHTML = toDinars(values.houseTotal).toFixed(2);
+				
+				avansPercentage.innerHTML = values.avansPercents;
+				
+				avansEur.innerHTML = values.avans.toFixed(2);
+				avansDin.innerHTML = toDinars(values.avans).toFixed(2);
+				
+				cashTotalEur.innerHTML = values.cashTotal.toFixed(2);
+				cashTotalDin.innerHTML = toDinars(values.cashTotal).toFixed(2);
+				
+				monthlyHouseEur.innerHTML = values.houseMonthly.toFixed(2);
+				monthlyHouseDin.innerHTML = toDinars(values.houseMonthly).toFixed(2);
+				
+				monthlyCashEur.innerHTML = values.cashMonthly.toFixed(2);
+				monthlyCashDin.innerHTML = toDinars(values.cashMonthly).toFixed(2);
+				
+				monthlyTotalEur.innerHTML = (values.houseMonthly + values.cashMonthly).toFixed(2);
+				monthlyTotalDin.innerHTML = toDinars(values.houseMonthly + values.cashMonthly).toFixed(2);
+			};
+			
+			const calculate = () => {
+				const housePrice = housePriceInput.value;
+				const avansPercents = +avansPercentageInput.value;
+				const avansCoefficient = avansPercents / 100;
+				
+				const houseTotal = housePrice * houseInterestCoefficient;
+				const houseMonthly = houseTotal / houseMonths;
+				
+				const cashTotal = houseTotal * avansCoefficient * cashInterestCoefficient;
+				const cashMonthly = cashTotal / cashMonths;
+				
+				const avans = houseTotal * avansCoefficient;
+				
+				render({
+					avansPercents,
+					avans,
+					houseTotal,
+					cashTotal,
+					houseMonthly,
+					cashMonthly
+				});
+			};
+			
+			// Events
+			housePriceInput.onchange = calculate;
+			avansPercentageInput.onchange = calculate;
+		</script>
+	</body>
+</html>
